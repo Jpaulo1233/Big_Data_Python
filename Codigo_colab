@@ -1,0 +1,98 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+df = pd.read_csv('https://github.com/Jpaulo1233/Big_Data_Python/raw/main/BaseFeminicidioEvolucaoMensalCisp%20(1).csv', encoding='latin-1', sep=';')
+  
+df.info()
+df.describe()
+  df.duplicated().sum()
+  pd.set_option('display.max_rows', None)
+
+df['Município'].value_counts()
+df.groupby('Município') [['Feminicídio', 'Tentativa de feminicídio']].sum() .sort_values(by='Feminicídio', ascending=False)
+df.groupby('Município') [['Feminicídio', 'Tentativa de feminicídio']].sum() .sort_values(by='Feminicídio', ascending=False).head(10)
+  df.groupby('Ano') [['Feminicídio', 'Tentativa de feminicídio']].sum()
+  # Criar Boxplot para verificar valores discrepantes nas variáveis numéricas principais
+plt.figure(figsize=(12, 5))
+
+plt.subplot(1, 2, 1)
+sns.boxplot(y=df['Feminicídio'], color='crimson')
+plt.title("Boxplot - Feminicídio (Identificação de Outliers)")
+
+plt.subplot(1, 2, 2)
+sns.boxplot(y=df['Tentativa de feminicídio'], color='orange')
+plt.title("Boxplot - Tentativa de Feminicídio (Identificação de Outliers)")
+
+plt.tight_layout()
+plt.show()
+  # Agrupar por município e somar as ocorrências
+top_municipios = df.groupby('Município')[['Feminicídio', 'Tentativa de feminicídio']].sum()
+
+# Selecionar as 10 cidades com mais casos de Feminicídio consumado
+top_10 = top_municipios.sort_values(by='Feminicídio', ascending=False).head(10)
+
+# Criar o gráfico de barras acumuladas ou lado a lado
+plt.figure(figsize=(12, 6))
+top_10.plot(kind='bar', figsize=(12, 6), color=['crimson', 'orange'])
+
+plt.title("Top 10 Municípios com Mais Ocorrências", fontsize=14, fontweight='bold')
+plt.xlabel("Município", fontsize=12)
+plt.ylabel("Número de ocorrências", fontsize=12)
+plt.xticks(rotation=45)
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.legend(["Feminicídio", "Tentativa de feminicídio"])
+plt.tight_layout()
+plt.show()
+  # Agrupa por Ano e soma ambas as colunas
+df_anual = df.groupby("Ano")[["Feminicídio", "Tentativa de feminicídio"]].sum().reset_index()
+
+# Ajusta o formato do DataFrame para facilitar a plotagem com Seaborn (formato 'long')
+df_melted = df_anual.melt(id_vars="Ano", value_vars=["Feminicídio", "Tentativa de feminicídio"],
+                          var_name="Tipo de Ocorrência", value_name="Total de Casos")
+
+sns.set_theme(style="whitegrid")
+plt.figure(figsize=(12, 6))
+
+# Plota o gráfico de linhas com marcadores para ambas as categorias
+sns.lineplot(
+    data=df_melted,
+    x="Ano",
+    y="Total de Casos",
+    hue="Tipo de Ocorrência",
+    marker="o",
+    linewidth=2.5,
+    palette={"Feminicídio": "crimson", "Tentativa de feminicídio": "orange"}
+)
+
+plt.title("Evolução Anual: Feminicídios vs. Tentativas de Feminicídio", fontsize=14, fontweight='bold')
+plt.xlabel("Ano", fontsize=12)
+plt.ylabel("Total de Ocorrências", fontsize=12)
+plt.xticks(df_anual["Ano"])
+plt.legend(title="Legenda")
+
+plt.show()
+  from sklearn.linear_model import LinearRegression
+
+# Definindo X (independente) e y (dependente)
+X = df_anual[['Tentativa de feminicídio']]
+y = df_anual['Feminicídio']
+
+# Ajustando o modelo
+modelo = LinearRegression()
+modelo.fit(X, y)
+y_pred = modelo.predict(X)
+
+print(f"Coeficiente Angular (Inclinação): {modelo.coef_[0]:.4f}")
+print(f"Intercepto: {modelo.intercept_:.4f}")
+
+# Gráfico de Regressão Linear no mesmo estilo do slide
+plt.figure(figsize=(10, 6))
+plt.scatter(X, y, color='crimson', label="Dados Reais", s=80)
+plt.plot(X, y_pred, color='black', linewidth=2, label="Regressão Linear")
+
+plt.title("Regressão Linear Simples: Feminicídio vs. Tentativa de Feminicídio", fontsize=14, fontweight='bold')
+plt.xlabel("Tentativa de feminicídio", fontsize=12)
+plt.ylabel("Feminicídio", fontsize=12)
+plt.legend()
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.show()
