@@ -96,3 +96,80 @@ plt.ylabel("Feminicídio", fontsize=12)
 plt.legend()
 plt.grid(True, linestyle='--', alpha=0.7)
 plt.show()
+import matplotlib.pyplot as plt
+
+# soma de feminicídios por município (2016-2026), pegando os 10 maiores
+mun = df.groupby("Município")["Feminicídio"].sum().sort_values(ascending=False).head(10)
+
+# [::-1] inverte a ordem para a capital ficar no topo do gráfico
+mun[::-1].plot(kind="barh", figsize=(8, 4), color="#C0392B")
+plt.title("10 municípios com mais feminicídios (2016-2026)")
+plt.xlabel("Nº de casos")
+plt.ylabel("")
+plt.tight_layout()
+plt.show()
+from scipy import stats
+import matplotlib.pyplot as plt
+
+x = mes["Feminicídio"]
+y = mes["Tentativa de feminicídio"]
+reg = stats.linregress(x, y)
+
+print("Coeficiente (inclinação):", round(reg.slope, 3))
+print("Intercepto:", round(reg.intercept, 3))
+print("R2:", round(reg.rvalue ** 2, 3))
+print("p-valor:", round(reg.pvalue, 3))
+
+plt.scatter(x, y)
+plt.plot(x, reg.intercept + reg.slope * x, color="red")
+plt.xlabel("Feminicídios no mês")
+plt.ylabel("Tentativas de feminicídio no mês")
+plt.show()
+import matplotlib.pyplot as plt
+
+colunas = ["Feminicídio", "Tentativa de feminicídio"]
+
+# Figura 1: casos por ano (apenas anos completos, 2017 a 2025)
+ano = df.groupby("Ano")[colunas].sum().loc[2017:2025]
+ano.plot(kind="bar", figsize=(8, 4), color=["#C0392B", "#E67E22"])
+plt.title("Casos por ano no Estado do RJ (anos completos, 2017-2025)")
+plt.xlabel("Ano")
+plt.ylabel("Nº de casos")
+plt.tight_layout()
+plt.show()
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+colunas = ["Feminicídio", "Tentativa de feminicídio"]
+
+# totais mensais do estado (uma linha por mês)
+mes = df.groupby(["Ano", "Mês"])[colunas].sum().reset_index()
+mes["rotulo"] = mes["Mês"].astype(str).str.zfill(2) + "/" + mes["Ano"].astype(str)
+
+fig, eixos = plt.subplots(1, 2, figsize=(11, 5.5))
+
+for ax, c in zip(eixos, colunas):
+    sns.boxplot(data=mes[c], ax=ax)
+
+    # limites do boxplot (regra de 1,5 x IQR)
+    q1, q3 = mes[c].quantile([0.25, 0.75])
+    iqr = q3 - q1
+    sup, inf = q3 + 1.5 * iqr, q1 - 1.5 * iqr
+
+    # meses outliers
+    outliers = mes[(mes[c] > sup) | (mes[c] < inf)]
+    for _, linha in outliers.iterrows():
+        ax.annotate(f"{linha['rotulo']} ({int(linha[c])})",
+                    xy=(0, linha[c]), xytext=(0.12, linha[c]),
+                    va="center", fontsize=9,
+                    arrowprops=dict(arrowstyle="-", color="gray", lw=0.6))
+
+    ax.set_xlim(-0.4, 0.6)
+    ax.set_title(f"{c} (total mensal)\nlimites: {inf:.1f} a {sup:.1f}")
+    ax.set_ylabel(c)
+    ax.set_xticks([])
+    print(c, "->", outliers[["rotulo", c]].values.tolist())
+
+plt.tight_layout()
+plt.show()
+
