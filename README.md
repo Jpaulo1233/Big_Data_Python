@@ -1,23 +1,77 @@
-Análise de Dados sobre Feminicídio no Rio de Janeiro (2015–2025)
+# Violência contra a Mulher no Estado do Rio de Janeiro
 
-Projeto extensionista desenvolvido por João Paulo para a disciplina de Tópicos de Big Data em Python, ministrada pela Prof. Simone Gama.
+Análise de dados sobre **feminicídio** e **tentativa de feminicídio** no Estado do Rio de Janeiro (nov/2016 a jul/2026), feita em Python como trabalho da disciplina **Tópicos de Big Data em Python** (Estácio Niterói, Profª. Simone Gama).
 
-Sobre o trabalho
+## Sobre o projeto
 
-Este projeto nasceu da vontade de usar a análise de dados para olhar mais de perto para um problema real e urgente: os casos de feminicídio e tentativa de feminicídio no estado do Rio de Janeiro ao longo de 10 anos (2015 a 2025).
+O objetivo é transformar uma base grande de registros policiais em informação clara para conscientizar a população e os órgãos públicos sobre a violência contra a mulher. O trabalho foi desenvolvido individualmente, com foco em limpeza, exploração e visualização dos dados.
 
-Em vez de deixar os números apenas em planilhas gigantes, utilizei Python para cruzar informações e responder a perguntas práticas:
+## Fonte dos dados
 
-Quais cidades concentram mais casos? Mapeei o ranking dos municípios fluminenses com maior número de registros para entender onde o cenário é mais crítico.
+- **ISP-RJ** (Instituto de Segurança Pública do Rio de Janeiro): https://www.ispdados.rj.gov.br/estatistica.html
+- Arquivo: `BaseFeminicidioEvolucaoMensalCisp.csv` (separador `;`, codificação `latin-1`)
+- Base: 17.165 linhas × 9 colunas, 138 CISPs, 41 AISPs, 7 RISPs, 92 municípios, sem valores nulos.
 
-Existe relação entre as tentativas e os casos consumados? Apliquei um modelo de regressão linear para observar como o aumento nas tentativas se reflete nos feminicídios consumados ao longo dos anos.
+## Tecnologias
 
-Quais meses fugiram completamente do padrão? Identifiquei os períodos atípicos (outliers) em que os números dispararam além do comportamento normal da série histórica.
+Python · Google Colab · Pandas · NumPy · Matplotlib · Seaborn · SciPy · Scikit-learn
 
-Por que isso importa?
+## Etapas do trabalho
 
-Por trás de cada linha da base de dados existem vidas. O objetivo desta análise não é apenas aplicar estatística, mas mostrar como o cruzamento de dados públicos pode ajudar a dar visibilidade ao problema e apoiar ações mais eficazes de prevenção e proteção às mulheres antes que a violência chegue ao extremo.
+1. **Definição do tema** e escolha da fonte.
+2. **Pipeline de limpeza e extração**: leitura do CSV, checagem de nulos e tipos.
+3. **Análise exploratória**: totais mensais e anuais, ranking de municípios, estatísticas descritivas.
+4. **Outliers (boxplot)**: regra de Tukey (Q3 + 1,5·IQR).
+5. **Regressão linear** entre feminicídios e tentativas.
+6. **Apresentação** dos resultados.
 
-Como foi feito
+## Principais resultados
 
-Toda a análise foi construída em Python dentro do Google Colab, utilizando bibliotecas como Pandas e NumPy para organizar e limpar os dados, Scikit-learn para o modelo estatístico e Matplotlib/Seaborn para criar os gráficos que ilustram os resultados.
+- **877 feminicídios** e **2.937 tentativas** no período.
+- Média mensal no Estado: **7,5 feminicídios** e **25,1 tentativas**.
+- A cidade do **Rio de Janeiro** concentra **308 feminicídios (35,1%)**.
+- Feminicídios por ano: 68 (2017) → 111 (2022) → 105 (2025).
+- Cerca de **3,3 tentativas para cada feminicídio**.
+- Regressão mensal: R² = 0,039 (relação linear fraca). A regressão anual com os anos completos (2017–2025) tem R² = 0,37 e p = 0,083, ou seja, não é estatisticamente significativa.
+
+### Observação metodológica sobre o boxplot
+
+Em ~95% das linhas CISP×mês o valor é 0, então Q1 = mediana = Q3 = 0 e todo valor positivo vira outlier (caixa "achatada"). Por isso o boxplot usa os **totais mensais do Estado** (117 meses), que mostram a distribuição de forma legível.
+
+## Como executar
+
+1. Abra um notebook no Google Colab e envie o CSV.
+2. Rode:
+
+```python
+import pandas as pd, numpy as np
+import seaborn as sns, matplotlib.pyplot as plt
+from scipy import stats
+
+df = pd.read_csv("BaseFeminicidioEvolucaoMensalCisp.csv", sep=";", encoding="latin-1")
+colunas = ["Feminicídio", "Tentativa de feminicídio"]
+
+# Totais mensais no Estado
+mes = df.groupby(["Ano", "Mês"])[colunas].sum().reset_index()
+
+# Boxplot
+sns.boxplot(data=mes[colunas])
+plt.show()
+
+# Regressão linear
+reg = stats.linregress(mes["Feminicídio"], mes["Tentativa de feminicídio"])
+print(reg.rvalue**2, reg.pvalue)
+```
+
+## Limitações
+
+- Os valores são **contagens absolutas**, não taxas por habitante.
+- A base reúne registros policiais; subnotificação não é medida.
+- Comparações anuais usam apenas anos completos (2017–2025).
+- A análise **não mede o efeito de penas** ou políticas públicas.
+- Significado da coluna `Fase` não confirmado.
+
+## Autor
+
+**João Paulo Cardoso de Almeida** — Estácio Niterói
+Disciplina: Tópicos de Big Data em Python · Profª. Simone Gama · 2026
